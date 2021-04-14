@@ -1,9 +1,8 @@
-﻿using Nop.Plugin.Payments.Tinkoff.TinkoffPaymentClientApi.ResponseEntity;
-
-namespace TinkoffPaymentClientApi.ResponseEntity
+﻿namespace Nop.Plugin.Payments.Tinkoff.TinkoffPaymentClientApi.ResponseEntity
 {
-    public class GetCustomerResponse : CustomerResponse {
-    public string Email { get; set; }
-    public string Phone { get; set; }
-  }
+    public class GetCustomerResponse : CustomerResponse
+    {
+        public string Email { get; set; }
+        public string Phone { get; set; }
+    }
 }

@@ -2,27 +2,43 @@
 
 using Nop.Core;
 using Nop.Core.Domain.Orders;
+using Nop.Plugin.Payments.Tinkoff.TinkoffPaymentClientApi;
+using Nop.Plugin.Payments.Tinkoff.TinkoffPaymentClientApi.Commands;
+using Nop.Plugin.Payments.Tinkoff.TinkoffPaymentClientApi.Models;
+using Nop.Services.Catalog;
+using Nop.Services.Orders;
 using Nop.Services.Payments;
 using Nop.Services.Plugins;
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 
 namespace Nop.Plugin.Payments.Tinkoff
 {
-    public class TinkoffPAymentProcessor : BasePlugin, IPaymentMethod
+    public class TinkoffPaymentProcessor : BasePlugin, IPaymentMethod
     {
         private readonly IWebHelper _webHelper;
+        private readonly IOrderService _orderService;
+        private readonly IProductService _productService;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public TinkoffPAymentProcessor(
-            IWebHelper webHelper)
+        public TinkoffPaymentProcessor(
+            IWebHelper webHelper,
+            IOrderService orderService,
+            IProductService productService,
+            IHttpContextAccessor httpContextAccessor)
         {
             _webHelper = webHelper;
+            _orderService = orderService;
+            _productService = productService;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public override string GetConfigurationPageUrl()
         {
-            return $"{_webHelper.GetStoreLocation()}Admin/PaymentTinkoff/Configure";
+            return $"{_webHelper.GetStoreLocation()}Admin/TinkoffPayment/Configure";
         }
 
         //Copied from PayPalStandart plugin
@@ -41,7 +57,7 @@ namespace Nop.Plugin.Payments.Tinkoff
 
         public decimal GetAdditionalHandlingFee(IList<ShoppingCartItem> cart)
         {
-            throw new System.NotImplementedException();
+            return 5;
         }
 
         public ProcessPaymentRequest GetPaymentInfo(IFormCollection form)
@@ -51,7 +67,7 @@ namespace Nop.Plugin.Payments.Tinkoff
 
         public string GetPublicViewComponentName()
         {
-            throw new System.NotImplementedException();
+            return "TinkoffPayment";
         }
 
         public bool HidePaymentMethod(IList<ShoppingCartItem> cart)
@@ -61,7 +77,40 @@ namespace Nop.Plugin.Payments.Tinkoff
 
         public void PostProcessPayment(PostProcessPaymentRequest postProcessPaymentRequest)
         {
-            throw new System.NotImplementedException();
+            using (var clientApi = new TinkoffPaymentClient("1616877814849DEMO", "ji8fz54h4pw8od4u"))
+            {
+                CancellationToken cancellationToken = CancellationToken.None;
+
+                var result = clientApi.InitAsync(
+                    new Init(postProcessPaymentRequest.Order.Id.ToString(),
+                             postProcessPaymentRequest.Order.OrderTotal)
+                    {
+                        Receipt = new Receipt("alex.pigaloyv@gmail.com", TinkoffPaymentClientApi.Enums.ETaxation.osn)
+                        {
+                            ReceiptItems = _orderService.GetOrderItems(postProcessPaymentRequest.Order.Id).Select(x =>
+                            {
+                                var product = _productService.GetProductById(x.ProductId);
+
+                                var item = new ReceiptItem(
+                                    product.Name,
+                                    x.Quantity,
+                                    product.Price,
+                                    TinkoffPaymentClientApi.Enums.ETax.vat20);
+
+                                return item;
+                            })
+                        },
+                        Data = new Dictionary<string, string>()
+                        {
+
+                        }
+                    }, cancellationToken).Result;
+
+                if (result.Success)
+                {
+                    _httpContextAccessor.HttpContext.Response.Redirect(result.PaymentURL);
+                }
+            }
         }
 
         public ProcessPaymentResult ProcessPayment(ProcessPaymentRequest processPaymentRequest)

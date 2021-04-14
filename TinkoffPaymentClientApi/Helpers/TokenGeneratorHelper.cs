@@ -6,8 +6,6 @@ using System.Security.Cryptography;
 using System.Text;
 
 using Nop.Plugin.Payments.Tinkoff.TinkoffPaymentClientApi.Attributes;
-using Nop.Plugin.Payments.Tinkoff.TinkoffPaymentClientApi.Commands;
-using Nop.Plugin.Payments.Tinkoff.TinkoffPaymentClientApi.ResponseEntity;
 
 namespace Nop.Plugin.Payments.Tinkoff.TinkoffPaymentClientApi.Helpers
 {
