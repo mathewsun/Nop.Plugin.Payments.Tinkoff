@@ -15,5 +15,6 @@ namespace Nop.Plugin.Payments.Tinkoff
         public string WorkTerminalKey { get; set; }
         public string WorkPassword { get; set; }
         #endregion
+        public int Commission { get; set; }
     }
 }

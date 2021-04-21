@@ -56,6 +56,12 @@ namespace Nop.Plugin.Payments.Tinkoff.TinkoffPaymentClientApi
             return result;
         }
 
+        public async Task<GetStateResponse> GetStateAsync(GetState getState, CancellationToken token)
+        {
+            var result = await SendRequestPost<GetState, GetStateResponse>(getState, token);
+            return result;
+        }
+
         public async Task<Submit3DSAuthorizationResponse> Submit3DSAuthorizationAsync(Submit3DSAuthorization submit3ds, CancellationToken token)
         {
             var result = await SendRequestPost<Submit3DSAuthorization, Submit3DSAuthorizationResponse>(submit3ds, token);
